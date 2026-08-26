@@ -338,15 +338,18 @@
 
   .fixed-metric-controls {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
-    margin-top: 12px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 10px;
   }
 
   .fixed-metric-controls button {
-    font-size: 18px;
+    min-width: 0;
+    padding: 10px 6px;
+    font-size: clamp(13px, 1.35vw, 17px);
     font-weight: 800;
-    min-height: 52px;
+    min-height: 48px;
+    line-height: 1.15;
   }
 
   .fixed-metric-note {
@@ -960,7 +963,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 <section class="top-panel">
     <div class="top-panel-inner">
       <div class="match-info">
-        <input id="playerName" type="text" placeholder="Goalkeeper name">
+        <input id="playerName" type="text" placeholder="Player name">
         <input id="matchDate" type="date">
         <input id="matchOpponent" type="text" placeholder="Opponent">
       </div>
@@ -1006,15 +1009,28 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     <label style="display:flex;gap:8px;align-items:center;margin-top:12px;">
       <input type="checkbox" id="editActionShowInPdf"><span>Show Coach Note in PDF</span>
     </label>
+    <div style="margin-top:16px;padding:14px;border-radius:14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);">
+      <strong>Clip Duration</strong>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">
+        <label>Before<select id="editClipBefore" onchange="updateEditClipLength()" style="display:block;width:100%;margin-top:5px;padding:10px;border-radius:10px;font-size:16px;"><option value="5">5 sec</option><option value="10">10 sec</option><option value="15">15 sec</option><option value="20">20 sec</option><option value="25">25 sec</option><option value="30">30 sec</option><option value="45">45 sec</option><option value="60">60 sec</option></select></label>
+        <label>After<select id="editClipAfter" onchange="updateEditClipLength()" style="display:block;width:100%;margin-top:5px;padding:10px;border-radius:10px;font-size:16px;"><option value="5">5 sec</option><option value="10">10 sec</option><option value="15">15 sec</option><option value="20">20 sec</option><option value="25">25 sec</option><option value="30">30 sec</option><option value="45">45 sec</option><option value="60">60 sec</option></select></label>
+      </div>
+      <div id="editClipTotal" style="margin-top:10px;font-weight:800;">Total clip length: 15 sec</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+        <button type="button" class="add-btn" onclick="resetEditClipDuration()">Reset to Standard</button>
+        <button type="button" class="add-btn" onclick="previewEditedClip()">▶ Preview Clip</button>
+      </div>
+    </div>
     <div style="margin-top:8px;font-size:12px;opacity:.75;">Metric + Score are added automatically to generated clips. Coach Note is added when present.</div>
     <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:16px;">
       <button type="button" class="add-btn" onclick="closeActionEdit()">Cancel</button>
       <button type="button" class="add-btn" onclick="saveActionEdit()">Save changes</button>
-      <button type="button" class="add-btn" id="updateExistingClipBtn" onclick="saveAndUpdateExistingClip()">Save + Update Clip</button>
+      <button type="button" class="add-btn" id="updateExistingClipBtn" onclick="saveAndUpdateExistingClip()">Save + Regenerate Clip</button>
     </div>
   </div>
 </div>
 <div id="gkaPlaylistOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:12000;padding:18px;box-sizing:border-box;align-items:center;justify-content:center;"><div style="width:min(980px,100%);max-height:94vh;overflow:auto;background:#101827;border:1px solid rgba(255,255,255,.18);border-radius:18px;padding:16px;box-sizing:border-box;"><div style="display:flex;align-items:center;gap:10px;justify-content:space-between;flex-wrap:wrap;margin-bottom:10px;"><div><strong id="gkaPlaylistTitle">▶ Play All Selected Clips</strong><div id="gkaPlaylistInfo" style="opacity:.75;font-size:14px;margin-top:3px;"></div></div><button class="add-btn" type="button" onclick="closeGkaPlaylist()">✕ Close</button></div><video id="gkaPlaylistPlayer" controls playsinline webkit-playsinline preload="auto" style="display:block;width:100%;max-height:68vh;background:#000;border-radius:12px;"></video><div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:12px;"><button class="add-btn" type="button" onclick="gkaPlaylistPrevious()">⏮ Previous</button><button class="add-btn" type="button" onclick="gkaPlaylistToggle()">⏯ Play / Pause</button><button class="add-btn" type="button" onclick="gkaPlaylistNext()">Next ⏭</button></div></div></div>
+<div id="clipProgressOverlay" style="display:none;position:fixed;inset:0;background:rgba(2,6,23,.86);z-index:15000;padding:18px;align-items:center;justify-content:center;"><div style="width:min(560px,100%);background:#0f172a;color:white;border:1px solid rgba(255,255,255,.18);border-radius:20px;padding:22px;box-shadow:0 24px 70px rgba(0,0,0,.45);"><h3 id="clipProgressTitle" style="margin:0 0 8px;">Generating clips…</h3><div id="clipProgressAction" style="opacity:.82;min-height:22px;margin-bottom:14px;">Preparing video…</div><div style="height:18px;background:#334155;border-radius:999px;overflow:hidden;"><div id="clipProgressBar" style="height:100%;width:0%;background:linear-gradient(90deg,#22c55e,#4ade80);transition:width .18s ease;"></div></div><div style="display:flex;justify-content:space-between;gap:12px;align-items:baseline;margin-top:10px;"><strong id="clipProgressPercent" style="font-size:30px;">0%</strong><span id="clipProgressCount">Clip 0 of 0</span></div><div id="clipProgressRemaining" style="margin-top:6px;opacity:.76;">Estimating remaining time…</div><div style="margin-top:14px;padding:10px;border-radius:10px;background:rgba(245,158,11,.12);color:#fde68a;font-weight:700;">Do not close this page while clips are being generated.</div></div></div>
 <div class="workspace">
     <div class="left-column">
       <section class="video-panel">
@@ -1049,37 +1065,37 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       <button class="score-btn top-btn" onclick="addScore('TOP')" title="Top intervention / decisive action" disabled>
         <span class="score-code">TOP</span>
         <span class="score-label">Top intervention</span>
-        <span class="score-value">+4</span>
+        <span class="score-value">10</span>
       </button>
       <button class="score-btn vg-btn" onclick="addScore('VG')" title="Very good intervention" disabled>
         <span class="score-code">VG</span>
         <span class="score-label">Very good</span>
-        <span class="score-value">+2.5</span>
+        <span class="score-value">8.4</span>
       </button>
       <button class="score-btn g-btn" onclick="addScore('G')" title="Good / correct action" disabled>
         <span class="score-code">G</span>
         <span class="score-label">Good action</span>
-        <span class="score-value">+1.0</span>
+        <span class="score-value">6.7</span>
       </button>
       <button class="score-btn" onclick="addScore('PUTIN0')" title="Neutral action" disabled style="background:#64748b;color:white;">
         <span class="score-code">R</span>
         <span class="score-label">Routine</span>
-        <span class="score-value">0</span>
+        <span class="score-value">5</span>
       </button>
       <button class="score-btn m-btn" onclick="addScore('M')" title="Mistake with no direct goal conceded" disabled>
         <span class="score-code">M</span>
         <span class="score-label">Mistake</span>
-        <span class="score-value">-1.0</span>
+        <span class="score-value">3.4</span>
       </button>
       <button class="score-btn bm-btn" onclick="addScore('BM')" title="Big mistake leading to danger / big chance" disabled>
         <span class="score-code">BM</span>
         <span class="score-label">Big mistake</span>
-        <span class="score-value">-2.5</span>
+        <span class="score-value">1.7</span>
       </button>
       <button class="score-btn mfg-btn" onclick="addScore('MFG')" title="Mistake for goal" disabled>
         <span class="score-code">MFG</span>
         <span class="score-label">Mistake for goal</span>
-        <span class="score-value">-5</span>
+        <span class="score-value">-1</span>
       </button>
     </div>
   </section>
@@ -1093,11 +1109,11 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     <div class="stat-box">
       <h3 id="overallPoints">Overall points: 0</h3>
       <h3 id="overallActions">Overall actions: 0</h3>
-      <h3 id="goalsConcedetImpact">Goals concedet impact: +3</h3>
+      <h3 id="goalsConcedetImpact">Match outcome impact: —</h3>
     </div>
 
     <div class="stat-box">
-      <h3 id="infoPlayer">Goalkeeper: -</h3>
+      <h3 id="infoPlayer">Player: -</h3>
       <h3 id="infoDate">Date: -</h3>
       <h3 id="infoOpponent">Opponent: -</h3>
     </div>
@@ -1105,7 +1121,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     <div class="stat-box final-box">
       <h3>Rating</h3>
       <div id="finalScore" class="final-value">0.0</div>
-      <div class="final-note">((Overall points incl. goals concedet ÷ rated actions) × 10)</div>
+      <div class="final-note">Overall action points ÷ rated actions, adjusted by match outcome</div>
     </div>
   </div>
 
@@ -1194,15 +1210,17 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   let activeMetric = null;
   const actionHistory = [];
   let goalsConcedet = 0;
+  let cleanSheetActive = false;
+  let goalOutcomeSelected = false;
 
   const SCORE_VALUES = {
-    TOP: 4,
-    VG: 2.5,
-    G: 1,
+    TOP: 10,
+    VG: 8.4,
+    G: 6.7,
     PUTIN0: 0,
-    M: -1,
-    BM: -2.5,
-    MFG: -5
+    M: 3.4,
+    BM: 1.7,
+    MFG: -1
   };
 
   const SCORE_ORDER = ['TOP', 'VG', 'G', 'PUTIN0', 'M', 'BM', 'MFG'];
@@ -1213,8 +1231,10 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   const IMPORT_REQUIRED_HEADERS_ZERO = ['Metric', 'Actions', 'Points', 'TOP', 'VG', 'G', '0', 'M', 'BM', 'MFG'];
   const GOALS_CONCEDET_METRIC = 'goals concedet';
   const MOMENTS_METRIC = 'MOMENTS';
-  const CLEAN_SHEET_BONUS = 3;
-  const GOAL_CONCEDED_PENALTY = 0.3;
+  const CLEAN_SHEET_MULTIPLIER = 1.10;
+  const GOAL_PENALTY_COEFFICIENT = 30;
+  const GOAL_PENALTY_MIN = 0.1;
+  const GOAL_PENALTY_MAX = 0.4;
 
   function normalizeScoreValue(value) {
     const normalized = String(value || '').trim().toUpperCase();
@@ -1354,13 +1374,47 @@ function selectVisibleActionLogVideos(){const visible=new Set(getFilteredActionH
     return actionHistory.filter(entry => entry.metric === MOMENTS_METRIC).length;
   }
 
-  function goalsConcedetPoints() {
-    return goalsConcedet === 0 ? CLEAN_SHEET_BONUS : -(goalsConcedet * GOAL_CONCEDED_PENALTY);
+  function actionPointsTotal() {
+    return Object.keys(metrics).reduce((sum, name) => sum + metricPoints(name), 0);
+  }
+
+  function baseRating() {
+    const actions = ratedActions();
+    return actions ? actionPointsTotal() / actions : 0;
+  }
+
+  function goalPenaltyPerGoal() {
+    const points = actionPointsTotal();
+    if (points <= 0) return GOAL_PENALTY_MAX;
+    return Math.min(GOAL_PENALTY_MAX, Math.max(GOAL_PENALTY_MIN, GOAL_PENALTY_COEFFICIENT / points));
+  }
+
+  function cleanSheetRatingBonus() {
+    if (!cleanSheetActive) return 0;
+    const base = baseRating();
+    return Math.max(0, Math.min(10, base * CLEAN_SHEET_MULTIPLIER) - base);
+  }
+
+  function goalsConcedetRatingPenalty() {
+    return goalsConcedet > 0 ? goalsConcedet * goalPenaltyPerGoal() : 0;
+  }
+
+  function goalOutcomeRatingImpact() {
+    if (!goalOutcomeSelected) return 0;
+    return cleanSheetActive ? cleanSheetRatingBonus() : -goalsConcedetRatingPenalty();
   }
 
   function formatGoalsConcedetImpact() {
-    const points = goalsConcedetPoints();
-    return `${points > 0 ? '+' : ''}${formatPoints(points)}`;
+    if (!goalOutcomeSelected) return '—';
+    const impact = goalOutcomeRatingImpact();
+    return `${impact > 0 ? '+' : ''}${impact.toFixed(1)}`;
+  }
+
+  function formatGoalOutcomeLabel() {
+    if (!goalOutcomeSelected) return '—';
+    if (cleanSheetActive) return `CLEAN SHEET (${formatGoalsConcedetImpact()})`;
+    const goalLabel = goalsConcedet === 1 ? '1 GOAL' : `${goalsConcedet} GOALS`;
+    return `${goalLabel} (${formatGoalsConcedetImpact()})`;
   }
 
   function formatPoints(value) {
@@ -1414,8 +1468,7 @@ function selectVisibleActionLogVideos(){const visible=new Set(getFilteredActionH
   }
 
   function overallPoints() {
-    const metricTotal = Object.keys(metrics).reduce((sum, name) => sum + metricPoints(name), 0);
-    return metricTotal + goalsConcedetPoints();
+    return actionPointsTotal();
   }
 
   function overallActions() {
@@ -1431,15 +1484,16 @@ function selectVisibleActionLogVideos(){const visible=new Set(getFilteredActionH
   }
 
   function finalScore() {
-    const actions = ratedActions();
-    if (!actions) return 0;
-    return (overallPoints() / actions) * 10;
+    const base = baseRating();
+    if (!goalOutcomeSelected) return base;
+    if (cleanSheetActive) return Math.min(10, base * CLEAN_SHEET_MULTIPLIER);
+    return base - goalsConcedetRatingPenalty();
   }
 
   function metricRating(name) {
-    const actions = metricActions(name);
+    const actions = Math.max(0, metricActions(name) - Number(metrics[name]?.PUTIN0 || 0));
     if (!actions) return 0;
-    return (metricPoints(name) / actions) * 10;
+    return metricPoints(name) / actions;
   }
 
   function setButtonsEnabled(enabled) {
@@ -1519,7 +1573,7 @@ function selectVisibleActionLogVideos(){const visible=new Set(getFilteredActionH
 
     if (overallPointsEl) overallPointsEl.textContent = 'Overall points: ' + formatPoints(overallPoints());
     if (overallActionsEl) overallActionsEl.textContent = 'Overall actions: ' + overallActions();
-    if (goalsImpactEl) goalsImpactEl.textContent = 'Goals concedet impact: ' + formatGoalsConcedetImpact();
+    if (goalsImpactEl) goalsImpactEl.textContent = 'Match outcome: ' + formatGoalOutcomeLabel();
     if (finalScoreEl) finalScoreEl.textContent = finalScore().toFixed(1);
   }
 
@@ -1527,12 +1581,34 @@ function selectVisibleActionLogVideos(){const visible=new Set(getFilteredActionH
     const nextValue = Math.max(0, goalsConcedet + Number(delta || 0));
     if (nextValue === goalsConcedet) return;
 
+    actionHistory.push({
+      type: 'goals-concedet',
+      previousValue: goalsConcedet,
+      previousCleanSheetActive: cleanSheetActive,
+      previousGoalOutcomeSelected: goalOutcomeSelected
+    });
     goalsConcedet = nextValue;
+    goalOutcomeSelected = goalsConcedet > 0;
+    cleanSheetActive = false;
     activeMetric = GOALS_CONCEDET_METRIC;
 
     refreshLiveTotals();
     render();
     requestAnimationFrame(refreshLiveTotals);
+  }
+
+  function toggleCleanSheet() {
+    actionHistory.push({
+      type: 'goals-concedet',
+      previousValue: goalsConcedet,
+      previousCleanSheetActive: cleanSheetActive,
+      previousGoalOutcomeSelected: goalOutcomeSelected
+    });
+    cleanSheetActive = !cleanSheetActive;
+    goalOutcomeSelected = cleanSheetActive;
+    goalsConcedet = 0;
+    activeMetric = GOALS_CONCEDET_METRIC;
+    render();
   }
 
   function getVideoCurrentSeconds() {
@@ -1632,6 +1708,8 @@ function selectVisibleActionLogVideos(){const visible=new Set(getFilteredActionH
 
     if (lastAction.type === 'goals-concedet') {
       goalsConcedet = Math.max(0, Number(lastAction.previousValue || 0));
+      cleanSheetActive = !!lastAction.previousCleanSheetActive;
+      goalOutcomeSelected = !!lastAction.previousGoalOutcomeSelected;
       activeMetric = GOALS_CONCEDET_METRIC;
     }
 
@@ -1648,26 +1726,29 @@ function selectVisibleActionLogVideos(){const visible=new Set(getFilteredActionH
       if (isGoalsConcedetMetric(name)) {
         const activeClass = activeMetric === GOALS_CONCEDET_METRIC ? 'active' : '';
         const statusLabel = activeMetric === GOALS_CONCEDET_METRIC ? 'ACTIVE' : 'FIXED';
-        const cleanSheetText = goalsConcedet === 0 ? `Clean sheet bonus: +${CLEAN_SHEET_BONUS}` : `Penalty: -${GOAL_CONCEDED_PENALTY} per goal`;
+        const cleanSheetText = !goalOutcomeSelected
+          ? 'Optional: leave unused for field players'
+          : (cleanSheetActive ? `CLEAN SHEET bonus: ${formatGoalsConcedetImpact()}` : `Goal penalty: ${formatGoalsConcedetImpact()}`);
         return `
           <div class="metric-card fixed-metric ${activeClass}" data-name="${GOALS_CONCEDET_METRIC}">
             <div class="metric-card-header">
-              <div class="metric-title">${GOALS_CONCEDET_METRIC}</div>
+              <div class="metric-title">CLEAN SHEET / GOALS CONCEDED</div>
               <div class="badge">${statusLabel}</div>
             </div>
             <div class="mini-stats">
-              <div><strong>Goals:</strong> ${goalsConcedet}</div>
+              <div><strong>Outcome:</strong> ${formatGoalOutcomeLabel()}</div>
               <div><strong>Impact:</strong> ${formatGoalsConcedetImpact()}</div>
               <div><strong>Rating:</strong> n/a</div>
             </div>
             <div class="breakdown">
               <span>Summary: hidden</span>
               <span>Actions: excluded</span>
-              <span>Overall points: only</span>
+              <span>Optional for players</span>
             </div>
             <div class="fixed-metric-controls">
-              <button type="button" class="delete-btn" onclick="event.stopPropagation(); adjustGoalsConcedet(-1)">-1 goal</button>
-              <button type="button" class="add-btn" onclick="event.stopPropagation(); adjustGoalsConcedet(1)">+1 goal</button>
+              <button type="button" class="add-btn" onclick="event.stopPropagation(); toggleCleanSheet()">${cleanSheetActive ? '✓ CLEAN SHEET' : 'CLEAN SHEET'}</button>
+              <button type="button" class="delete-btn" onclick="event.stopPropagation(); adjustGoalsConcedet(-1)">−1 GOAL</button>
+              <button type="button" class="add-btn" onclick="event.stopPropagation(); adjustGoalsConcedet(1)">+1 GOAL</button>
             </div>
             <div class="fixed-metric-note">${cleanSheetText}</div>
           </div>
@@ -1768,6 +1849,27 @@ function selectVisibleActionLogVideos(){const visible=new Set(getFilteredActionH
     if(wrap) wrap.style.display=negative?'block':'none';
     if(!negative && document.getElementById('editActionErrorType')) document.getElementById('editActionErrorType').value='';
   }
+  function actionClipBefore(entry){return Math.max(0,Number(entry?.clipBefore??GKA_CLIP_BEFORE)||GKA_CLIP_BEFORE)}
+  function actionClipAfter(entry){return Math.max(0,Number(entry?.clipAfter??GKA_CLIP_AFTER)||GKA_CLIP_AFTER)}
+  function updateEditClipLength(){
+    const before=Number(document.getElementById('editClipBefore')?.value||GKA_CLIP_BEFORE);
+    const after=Number(document.getElementById('editClipAfter')?.value||GKA_CLIP_AFTER);
+    const el=document.getElementById('editClipTotal');if(el)el.textContent=`Total clip length: ${before+after} sec`;
+  }
+  function resetEditClipDuration(){document.getElementById('editClipBefore').value=String(GKA_CLIP_BEFORE);document.getElementById('editClipAfter').value=String(GKA_CLIP_AFTER);updateEditClipLength()}
+  let editClipPreviewTimer=null;
+  async function previewEditedClip(){
+    const i=Number(document.getElementById('editActionIndex').value),entry=actionHistory[i];
+    const player=document.getElementById('videoPlayer'),file=document.getElementById('videoUpload')?.files?.[0];
+    if(!entry||!player||!file){alert('За Preview Clip първо зареди оригиналния мач.');return}
+    if(player.dataset.originalVideoUrl&&player.src!==player.dataset.originalVideoUrl){player.src=player.dataset.originalVideoUrl;player.load()}
+    if(player.readyState<1)await gkaWaitForEvent(player,'loadedmetadata',20000);
+    const before=Number(document.getElementById('editClipBefore').value),after=Number(document.getElementById('editClipAfter').value);
+    const eventTime=Number.isFinite(Number(entry.seconds))?Number(entry.seconds):parseTimestampToSeconds(entry.timestamp||'00:00');
+    const start=Math.max(0,eventTime-before),end=Math.min(Number.isFinite(player.duration)?player.duration:eventTime+after,eventTime+after);
+    clearTimeout(editClipPreviewTimer);player.pause();player.currentTime=start;await gkaWaitForEvent(player,'seeked',20000);closeActionEdit();player.scrollIntoView({behavior:'smooth',block:'center'});await player.play();
+    editClipPreviewTimer=setTimeout(()=>{player.pause();openActionEdit(i)},Math.max(.2,end-start)*1000);
+  }
   function openActionEdit(actionIndex){
     const entry=actionHistory[actionIndex]; if(!entry||entry.type!=='score')return;
     document.getElementById('editActionIndex').value=String(actionIndex);
@@ -1779,6 +1881,9 @@ function selectVisibleActionLogVideos(){const visible=new Set(getFilteredActionH
     document.getElementById('editActionNote').value=entry.note||'';
     document.getElementById('editActionErrorType').value=entry.errorType||'';
     document.getElementById('editActionShowInPdf').checked=!!entry.showInPdf;
+    document.getElementById('editClipBefore').value=String(actionClipBefore(entry));
+    document.getElementById('editClipAfter').value=String(actionClipAfter(entry));
+    updateEditClipLength();
     updateEditErrorTypeVisibility();
     const updateClipBtn = document.getElementById('updateExistingClipBtn');
     if (updateClipBtn) {
@@ -1791,7 +1896,7 @@ function selectVisibleActionLogVideos(){const visible=new Set(getFilteredActionH
   function saveActionEdit(){
     const i=Number(document.getElementById('editActionIndex').value),entry=actionHistory[i];
     if(!entry||entry.type!=='score')return;
-    const before=JSON.stringify([entry.metric,normalizeScoreValue(entry.value),entry.note||'',entry.errorType||'',!!entry.showInPdf]);
+    const before=JSON.stringify([entry.metric,normalizeScoreValue(entry.value),entry.note||'',entry.errorType||'',!!entry.showInPdf,actionClipBefore(entry),actionClipAfter(entry)]);
     const score=normalizeScoreValue(document.getElementById('editActionScore').value);
     entry.metric=document.getElementById('editActionMetric').value;
     entry.value=score;
@@ -1799,7 +1904,9 @@ function selectVisibleActionLogVideos(){const visible=new Set(getFilteredActionH
     entry.note=document.getElementById('editActionNote').value.trim();
     entry.errorType=['M','BM','MFG'].includes(score)?document.getElementById('editActionErrorType').value:'';
     entry.showInPdf=!!document.getElementById('editActionShowInPdf').checked;
-    const after=JSON.stringify([entry.metric,score,entry.note,entry.errorType,entry.showInPdf]);
+    entry.clipBefore=Number(document.getElementById('editClipBefore').value)||GKA_CLIP_BEFORE;
+    entry.clipAfter=Number(document.getElementById('editClipAfter').value)||GKA_CLIP_AFTER;
+    const after=JSON.stringify([entry.metric,score,entry.note,entry.errorType,entry.showInPdf,entry.clipBefore,entry.clipAfter]);
     if(before!==after){entry.edited=true;entry.editedAt=new Date().toISOString();if(entry._gkaVideoName)entry._clipNeedsRegeneration=true}
     rebuildMetricsFromHistory();rebuildMetricMultiFilter();closeActionEdit();render();
   }
@@ -1827,30 +1934,37 @@ function selectVisibleActionLogVideos(){const visible=new Set(getFilteredActionH
   async function updateExistingActionClip(actionIndex) {
     const entry = actionHistory[actionIndex];
     if (!entry || entry.type !== 'score') throw new Error('Action not found.');
-    if (!entry._gkaVideoName) throw new Error('This action has no existing clip.');
-
-    const oldBlob = gkaVideoClips.get(entry._gkaVideoName);
-    if (!oldBlob) throw new Error('The existing clip is not available in this GKA package.');
-
-    gkaStatus('Обновявам текста върху съществуващия клип…');
-
-    const player = await gkaLoadBlobIntoMainPlayer(oldBlob);
-    const duration = Number.isFinite(player.duration) && player.duration > 0
-      ? player.duration
-      : Number(entry._gkaClipDuration || (GKA_CLIP_BEFORE + GKA_CLIP_AFTER));
-
-    // The imported clip itself is now the source: no original full-match video is required.
-    const recorded = await gkaRecordClipFromVideo(player, 0, Math.max(0.2, duration), 1, 1, entry);
+    let player=document.getElementById('videoPlayer');const file=document.getElementById('videoUpload')?.files?.[0];
+    if(!player)throw new Error('Video player not found.');
+    const eventTime=Number.isFinite(Number(entry.seconds))?Number(entry.seconds):parseTimestampToSeconds(entry.timestamp||'00:00');
+    const before=actionClipBefore(entry),after=actionClipAfter(entry);let start,duration;
+    if(file){
+      if(player.dataset.originalVideoUrl&&player.src!==player.dataset.originalVideoUrl){player.src=player.dataset.originalVideoUrl;player.load()}
+      if(player.readyState<1)await gkaWaitForEvent(player,'loadedmetadata',20000);
+      start=Math.max(0,eventTime-before);duration=Math.max(.2,Math.min(before+after,Number.isFinite(player.duration)?player.duration-start:before+after));
+    }else{
+      const oldBlob=entry._gkaVideoName&&gkaVideoClips.get(entry._gkaVideoName);if(!oldBlob)throw new Error('За промяна на дължината зареди оригиналния мач.');
+      player=await gkaLoadBlobIntoMainPlayer(oldBlob);const oldDuration=Number(entry._gkaClipDuration||player.duration||15);
+      if(Math.abs(before+after-oldDuration)>.6)throw new Error('За по-дълъг клип е необходим оригиналният мач.');
+      start=0;duration=Math.max(.2,oldDuration);
+    }
+    showClipProgress(1,'Regenerating clip…');
+    gkaStatus('Генерирам клипа с новата дължина…');
+    const recorded = await gkaRecordClipFromVideo(player, start, duration, 1, 1, entry);
 
     // Replace the old clip in-place so GKA does not grow with duplicate versions.
-    gkaVideoClips.set(entry._gkaVideoName, recorded.blob);
+    const oldName=entry._gkaVideoName;
+    const filename=oldName||`videos/action_${String(actionHistory.filter(e=>e.type==='score').indexOf(entry)+1).padStart(3,'0')}.${gkaExtensionForMime(recorded.mimeType)}`;
+    if(oldName&&oldName!==filename)gkaVideoClips.delete(oldName);
+    gkaVideoClips.set(filename, recorded.blob);entry._gkaVideoName=filename;
     entry._gkaVideoMime = recorded.mimeType;
-    entry._gkaClipStart = 0;
+    entry._gkaClipStart = start;
     entry._gkaClipDuration = duration;
     entry._clipNeedsRegeneration = false;
     delete entry._gkaVideoError;
 
     renderLogTable();
+    finishClipProgress(1,1,0);
     gkaStatus('Клипът е обновен с Metric • Score и Coach Note.');
   }
 
@@ -1869,6 +1983,8 @@ function selectVisibleActionLogVideos(){const visible=new Set(getFilteredActionH
       ? document.getElementById('editActionErrorType').value
       : '';
     entry.showInPdf = !!document.getElementById('editActionShowInPdf').checked;
+    entry.clipBefore = Number(document.getElementById('editClipBefore').value) || GKA_CLIP_BEFORE;
+    entry.clipAfter = Number(document.getElementById('editClipAfter').value) || GKA_CLIP_AFTER;
     entry.edited = true;
     entry.editedAt = new Date().toISOString();
 
@@ -1883,6 +1999,7 @@ function selectVisibleActionLogVideos(){const visible=new Set(getFilteredActionH
     } catch (error) {
       console.error('[GK Analysis] Existing clip update failed:', error);
       gkaStatus('Не успях да обновя съществуващия клип.');
+      hideClipProgress();
       alert('Не успях да обновя клипа.\n\n' + (error?.message || String(error)));
     }
   }
@@ -1898,13 +2015,13 @@ function selectVisibleActionLogVideos(){const visible=new Set(getFilteredActionH
     document.getElementById('metricActions').textContent = 'Metric actions: ' + (activeMetric ? ((activeIsGoalsConcedet || activeIsMoments) ? 0 : metricActions(activeMetric)) : 0);
     document.getElementById('overallPoints').textContent = 'Overall points: ' + formatPoints(overallPoints());
     document.getElementById('overallActions').textContent = 'Overall actions: ' + overallActions();
-    document.getElementById('goalsConcedetImpact').textContent = 'Goals concedet impact: ' + formatGoalsConcedetImpact();
+    document.getElementById('goalsConcedetImpact').textContent = 'Match outcome: ' + formatGoalOutcomeLabel();
 
     const player = document.getElementById('playerName').value || '-';
     const date = document.getElementById('matchDate').value || '-';
     const opponent = document.getElementById('matchOpponent').value || '-';
 
-    document.getElementById('infoPlayer').textContent = 'Goalkeeper: ' + player;
+    document.getElementById('infoPlayer').textContent = 'Player: ' + player;
     document.getElementById('infoDate').textContent = 'Date: ' + date;
     document.getElementById('infoOpponent').textContent = 'Opponent: ' + opponent;
     document.getElementById('finalScore').textContent = finalScore().toFixed(1);
@@ -1936,7 +2053,7 @@ function selectVisibleActionLogVideos(){const visible=new Set(getFilteredActionH
     const pdfActions = overallActions();
     const pdfRoutine = overallRoutineActions();
     const pdfPointsClass = pdfPoints > 0 ? 'pdf-positive' : (pdfPoints < 0 ? 'pdf-negative' : 'pdf-neutral');
-    const pdfGoalsClass = goalsConcedet === 0 ? 'pdf-positive' : 'pdf-negative';
+    const pdfGoalsClass = !goalOutcomeSelected ? 'pdf-neutral' : (cleanSheetActive ? 'pdf-positive' : 'pdf-negative');
     const pdfPointsText = `${pdfPoints > 0 ? '+' : ''}${formatPoints(pdfPoints)}`;
     const pdfValue = (value, tone) => {
       const numericValue = Number(value || 0);
@@ -2140,7 +2257,7 @@ function selectVisibleActionLogVideos(){const visible=new Set(getFilteredActionH
         <img class="pdf-logo" src="${logoDataUrl}" alt="HAK GKC logo">
         <div class="pdf-title-wrap">
           <h1>GK Analysis Report</h1>
-          <p>Goalkeeper performance report</p>
+          <p>Player performance report</p>
         </div>
       </div>
       <div class="pdf-rating">
@@ -2154,7 +2271,7 @@ function selectVisibleActionLogVideos(){const visible=new Set(getFilteredActionH
 
     <div class="pdf-meta">
       <div class="pdf-meta-card">
-        <strong>Goalkeeper</strong>
+        <strong>Player</strong>
         <span>${escapeHtml(player)}</span>
       </div>
       <div class="pdf-meta-card">
@@ -2174,8 +2291,8 @@ function selectVisibleActionLogVideos(){const visible=new Set(getFilteredActionH
         <span>${pdfValue(overallPositiveCount(), 'positive')} / ${pdfValue(overallNegativeCount(), 'negative')}</span>
       </div>
       <div class="pdf-meta-card">
-        <strong>${escapeHtml(GOALS_CONCEDET_METRIC)}</strong>
-        <span class="${pdfGoalsClass}">${goalsConcedet} (${formatGoalsConcedetImpact()})</span>
+        <strong>Match outcome</strong>
+        <span class="${pdfGoalsClass}">${escapeHtml(formatGoalOutcomeLabel())}</span>
       </div>
     </div>
 
@@ -2256,13 +2373,18 @@ function selectVisibleActionLogVideos(){const visible=new Set(getFilteredActionH
     }));
 
     return {
+      player,
       goalkeeper: player,
       date,
       opponent,
       goalsConcedet,
-      goalsConcedetImpact: Number(goalsConcedetPoints().toFixed(1)),
-      cleanSheetBonus: goalsConcedet === 0 ? CLEAN_SHEET_BONUS : 0,
-      goalConcededPenalty: GOAL_CONCEDED_PENALTY,
+      goalOutcomeSelected,
+      cleanSheetActive,
+      goalOutcomeLabel: formatGoalOutcomeLabel(),
+      goalsConcedetImpact: Number(goalOutcomeRatingImpact().toFixed(3)),
+      cleanSheetBonus: Number(cleanSheetRatingBonus().toFixed(3)),
+      goalConcededPenalty: Number(goalPenaltyPerGoal().toFixed(3)),
+      goalPenaltyCoefficient: GOAL_PENALTY_COEFFICIENT,
       overallPoints: Number(overallPoints().toFixed(1)),
       overallActions: overallActions(),
       overallPositiveActions: overallPositiveCount(),
@@ -2307,6 +2429,8 @@ function selectVisibleActionLogVideos(){const visible=new Set(getFilteredActionH
     actionHistory.length = 0;
     activeMetric = null;
     goalsConcedet = 0;
+    cleanSheetActive = false;
+    goalOutcomeSelected = false;
   }
 
   function triggerImport() {
@@ -2345,10 +2469,17 @@ function selectVisibleActionLogVideos(){const visible=new Set(getFilteredActionH
 
     resetAppState();
 
-    document.getElementById('playerName').value = data.goalkeeper || '';
+    document.getElementById('playerName').value = data.player || data.goalkeeper || '';
     document.getElementById('matchDate').value = data.date || '';
     document.getElementById('matchOpponent').value = data.opponent || '';
     goalsConcedet = Math.max(0, Math.round(Number(data.goalsConcedet || 0)));
+    if (Object.prototype.hasOwnProperty.call(data, 'goalOutcomeSelected')) {
+      goalOutcomeSelected = !!data.goalOutcomeSelected;
+      cleanSheetActive = !!data.cleanSheetActive && goalsConcedet === 0;
+    } else {
+      cleanSheetActive = goalsConcedet === 0 && Number(data.cleanSheetBonus || 0) > 0;
+      goalOutcomeSelected = cleanSheetActive || goalsConcedet > 0;
+    }
 
     if (Array.isArray(data.metricsSummary)) {
       data.metricsSummary.forEach(row => {
@@ -2365,7 +2496,7 @@ function selectVisibleActionLogVideos(){const visible=new Set(getFilteredActionH
           type: 'score',
           metric: String(entry.metric),
           value: normalizeScoreValue(entry.score),
-          points: Number(entry.points ?? SCORE_VALUES[normalizeScoreValue(entry.score)] ?? 0),
+          points: Number(SCORE_VALUES[normalizeScoreValue(entry.score)] ?? 0),
           timestamp: entry.time || formatTimestamp(Number(entry.seconds || 0)),
           seconds: Number(entry.seconds || 0)
         });
@@ -2446,10 +2577,16 @@ function selectVisibleActionLogVideos(){const visible=new Set(getFilteredActionH
       if (section === 'MATCH INFO') {
         const [label, value] = cols;
         if (label === 'CSV Format Version') continue;
-        if (label === 'Goalkeeper') document.getElementById('playerName').value = value || '';
+        if (label === 'Player' || label === 'Goalkeeper') document.getElementById('playerName').value = value || '';
         if (label === 'Date') document.getElementById('matchDate').value = value || '';
         if (label === 'Opponent') document.getElementById('matchOpponent').value = value || '';
         if (label === 'Goals Concedet') goalsConcedet = Math.max(0, Math.round(Number(value || 0)));
+        if (label === 'Goal Outcome Selected') goalOutcomeSelected = String(value).toLowerCase() === 'true';
+        if (label === 'Clean Sheet Active') cleanSheetActive = String(value).toLowerCase() === 'true';
+        if (label === 'Goals Concedet Impact' && Number(value) > 0 && goalsConcedet === 0) {
+          goalOutcomeSelected = true;
+          cleanSheetActive = true;
+        }
       }
 
       if (section === 'METRICS SUMMARY') {
@@ -2471,7 +2608,7 @@ function selectVisibleActionLogVideos(){const visible=new Set(getFilteredActionH
           type: 'score',
           metric: metric,
           value: normalizedScore,
-          points: Number(points ?? SCORE_VALUES[normalizedScore] ?? 0),
+          points: Number(SCORE_VALUES[normalizedScore] ?? 0),
           timestamp: time || '00:00',
           seconds: Math.max(0, parseTimestampToSeconds(time || '00:00') + legacyTimestampCorrection)
         });
@@ -2517,10 +2654,13 @@ function selectVisibleActionLogVideos(){const visible=new Set(getFilteredActionH
 
     lines.push('MATCH INFO');
     lines.push('CSV Format Version,2');
-    lines.push(`Goalkeeper,${escapeCSV(report.goalkeeper)}`);
+    lines.push(`Player,${escapeCSV(report.player)}`);
     lines.push(`Date,${escapeCSV(report.date)}`);
     lines.push(`Opponent,${escapeCSV(report.opponent)}`);
     lines.push(`Goals Concedet,${report.goalsConcedet}`);
+    lines.push(`Goal Outcome Selected,${report.goalOutcomeSelected}`);
+    lines.push(`Clean Sheet Active,${report.cleanSheetActive}`);
+    lines.push(`Goal Outcome,${escapeCSV(report.goalOutcomeLabel)}`);
     lines.push(`Goals Concedet Impact,${report.goalsConcedetImpact}`);
     lines.push(`Overall Points,${report.overallPoints}`);
     lines.push(`Overall Actions,${report.overallActions}`);
@@ -2574,7 +2714,9 @@ function selectVisibleActionLogVideos(){const visible=new Set(getFilteredActionH
     videoUpload.addEventListener('change', function() {
       const file = this.files && this.files[0];
       if (!file) return;
+      if (videoPlayer.dataset.originalVideoUrl) URL.revokeObjectURL(videoPlayer.dataset.originalVideoUrl);
       const url = URL.createObjectURL(file);
+      videoPlayer.dataset.originalVideoUrl = url;
       videoPlayer.src = url;
       videoPlayer.load();
     });
@@ -2654,6 +2796,23 @@ const GKA_CLIP_AFTER = 5;
 const gkaVideoClips = new Map(); // filename -> Blob
 let gkaFFmpeg = null;
 let gkaFFmpegLoading = null;
+let clipProgressStartedAt = 0;
+
+function showClipProgress(total, title='Generating clips…'){
+  clipProgressStartedAt=performance.now();
+  const o=document.getElementById('clipProgressOverlay');if(o)o.style.display='flex';
+  const t=document.getElementById('clipProgressTitle');if(t)t.textContent=title;
+  updateClipProgress(0,total,0,'Preparing video…');
+}
+function updateClipProgress(index,total,fraction,actionText=''){
+  const safeTotal=Math.max(1,total),overall=Math.max(0,Math.min(1,(Math.max(0,index-1)+Math.max(0,Math.min(1,fraction)))/safeTotal));
+  const percent=Math.round(overall*100);
+  const bar=document.getElementById('clipProgressBar'),pct=document.getElementById('clipProgressPercent'),count=document.getElementById('clipProgressCount'),action=document.getElementById('clipProgressAction'),remaining=document.getElementById('clipProgressRemaining');
+  if(bar)bar.style.width=percent+'%';if(pct)pct.textContent=percent+'%';if(count)count.textContent=`Clip ${Math.min(index,total)} of ${total}`;if(action&&actionText)action.textContent=actionText;
+  if(remaining){if(overall>.03){const elapsed=(performance.now()-clipProgressStartedAt)/1000,seconds=Math.max(0,Math.round(elapsed*(1-overall)/overall));remaining.textContent=`Estimated time remaining: about ${Math.floor(seconds/60)}:${String(seconds%60).padStart(2,'0')}`;}else remaining.textContent='Estimating remaining time…';}
+}
+function finishClipProgress(success,total,failed=0){updateClipProgress(total,total,1,failed?`${success} ready • ${failed} failed`:`${success} clips ready`);const t=document.getElementById('clipProgressTitle');if(t)t.textContent=failed?'⚠️ Generation completed':'✅ Generation completed';setTimeout(()=>{const o=document.getElementById('clipProgressOverlay');if(o)o.style.display='none'},1400)}
+function hideClipProgress(){const o=document.getElementById('clipProgressOverlay');if(o)o.style.display='none'}
 
 function gkaStatus(text) {
   const el = document.getElementById('gkaVideoStatus');
@@ -2677,10 +2836,14 @@ function gkaBuildPackageData() {
     createdAt: new Date().toISOString(),
     clipWindow: { beforeSeconds: GKA_CLIP_BEFORE, afterSeconds: GKA_CLIP_AFTER },
     match: {
+      player: report.player,
       goalkeeper: report.goalkeeper,
       date: report.date,
       opponent: report.opponent,
       goalsConcedet: report.goalsConcedet,
+      goalOutcomeSelected: report.goalOutcomeSelected,
+      cleanSheetActive: report.cleanSheetActive,
+      goalOutcomeLabel: report.goalOutcomeLabel,
       goalsConcedetImpact: report.goalsConcedetImpact,
       cleanSheetBonus: report.cleanSheetBonus,
       goalConcededPenalty: report.goalConcededPenalty,
@@ -2711,6 +2874,8 @@ function gkaBuildPackageData() {
         editedAt: entry.editedAt || null,
         errorType: entry.errorType || '',
         showInPdf: !!entry.showInPdf,
+        clipBefore: actionClipBefore(entry),
+        clipAfter: actionClipAfter(entry),
         clipNeedsRegeneration: !!entry._clipNeedsRegeneration
     })).filter(e => e.type === 'score'),
     videos: Array.from(gkaVideoClips.keys()),
@@ -3023,6 +3188,7 @@ async function gkaRecordClipFromVideo(video, start, duration, clipIndex, totalCl
     const tick = () => {
       const elapsed = (performance.now() - startedAt) / 1000;
       gkaStatus(`Генерирам клип ${clipIndex} / ${totalClips} — ${Math.min(duration, elapsed).toFixed(1)} / ${duration.toFixed(1)} sec`);
+      updateClipProgress(clipIndex,totalClips,Math.min(1,elapsed/Math.max(.2,duration)),`${actionEntry?.timestamp||''} • ${actionEntry?.metric||''}`);
       if (video.ended || video.currentTime >= endTime - 0.03 || elapsed >= duration + 3) return resolve();
       setTimeout(tick, 120);
     };
@@ -3279,8 +3445,9 @@ async function exportSelectedAsOneVideo() {
         : parseTimestampToSeconds(entry.timestamp || '00:00')
     );
 
-    const start = Math.max(0, eventTime - GKA_CLIP_BEFORE);
-    let duration = GKA_CLIP_BEFORE + GKA_CLIP_AFTER;
+    const before=actionClipBefore(entry),after=actionClipAfter(entry);
+    const start = Math.max(0, eventTime - before);
+    let duration = before + after;
 
     if (matchDuration !== null) {
       duration = Math.max(0.2, Math.min(duration, matchDuration - start));
@@ -3514,6 +3681,8 @@ async function generateActionVideos(options = {}) {
   if (existingSelected.length && !confirm(`За ${existingSelected.length} от избраните действия вече има клип. Да ги генерирам отново?`)) return;
 
   try {
+    showClipProgress(entries.length);
+    if(videoPlayer.dataset.originalVideoUrl&&videoPlayer.src!==videoPlayer.dataset.originalVideoUrl){videoPlayer.src=videoPlayer.dataset.originalVideoUrl;videoPlayer.load()}
     if (videoPlayer.readyState < 1) await gkaWaitForEvent(videoPlayer, 'loadedmetadata', 20000);
 
     // IMPORTANT: Do NOT clear clips belonging to unselected actions.
@@ -3540,8 +3709,9 @@ async function generateActionVideos(options = {}) {
           : parseTimestampToSeconds(entry.timestamp || '00:00')
       );
 
-      const start = Math.max(0, eventTime - GKA_CLIP_BEFORE);
-      let duration = GKA_CLIP_BEFORE + GKA_CLIP_AFTER;
+      const clipBefore = actionClipBefore(entry), clipAfter = actionClipAfter(entry);
+      const start = Math.max(0, eventTime - clipBefore);
+      let duration = clipBefore + clipAfter;
       if (totalDuration !== null) {
         duration = Math.max(0.2, Math.min(duration, totalDuration - start));
       }
@@ -3580,6 +3750,7 @@ async function generateActionVideos(options = {}) {
 
     const failed = entries.length - success;
     gkaStatus(`Готово — ${success} от ${entries.length} избрани клипа са готови.`);
+    finishClipProgress(success,entries.length,failed);
     alert(
       `Готово! Генерирани са ${success} от ${entries.length} избрани клипа.` +
       (failed ? `\n${failed} клипа не успяха и са отбелязани в Action Log.` : '') +
@@ -3588,6 +3759,7 @@ async function generateActionVideos(options = {}) {
   } catch (error) {
     console.error('[GK Analysis] Browser-native clip generation failed:', error);
     gkaStatus('Генерирането на клиповете прекъсна.');
+    hideClipProgress();
     renderLogTable();
     alert('Не успях да генерирам избраните клипове.\n\n' + (error?.message || String(error)));
   }
@@ -3697,10 +3869,11 @@ function buildGKAPackageCSV(data) {
   const lines = [];
   lines.push('MATCH INFO');
   lines.push('CSV Format Version,2');
-  lines.push(`Goalkeeper,${escapeCSV(data.match.goalkeeper)}`);
+  lines.push(`Player,${escapeCSV(data.match.player || data.match.goalkeeper)}`);
   lines.push(`Date,${escapeCSV(data.match.date)}`);
   lines.push(`Opponent,${escapeCSV(data.match.opponent)}`);
   lines.push(`Goals Concedet,${data.match.goalsConcedet}`);
+  lines.push(`Goal Outcome,${escapeCSV(data.match.goalOutcomeLabel || '—')}`);
   lines.push(`Rating,${data.match.rating}`);
   lines.push('');
   lines.push('ACTION LOG');
@@ -3721,10 +3894,17 @@ async function importGKAPackage(file) {
 
   resetAppState();
   gkaVideoClips.clear();
-  document.getElementById('playerName').value = data.match?.goalkeeper || '';
+  document.getElementById('playerName').value = data.match?.player || data.match?.goalkeeper || '';
   document.getElementById('matchDate').value = data.match?.date || '';
   document.getElementById('matchOpponent').value = data.match?.opponent || '';
   goalsConcedet = Math.max(0, Math.round(Number(data.match?.goalsConcedet || 0)));
+  if (Object.prototype.hasOwnProperty.call(data.match || {}, 'goalOutcomeSelected')) {
+    goalOutcomeSelected = !!data.match.goalOutcomeSelected;
+    cleanSheetActive = !!data.match.cleanSheetActive && goalsConcedet === 0;
+  } else {
+    cleanSheetActive = goalsConcedet === 0 && Number(data.match?.cleanSheetBonus || 0) > 0;
+    goalOutcomeSelected = cleanSheetActive || goalsConcedet > 0;
+  }
 
   if (Array.isArray(data.metricsSummary)) {
     data.metricsSummary.forEach(row => {
@@ -3739,7 +3919,7 @@ async function importGKAPackage(file) {
         type: 'score',
         metric: String(row.metric),
         value: normalizeScoreValue(row.score),
-        points: Number(row.points || 0),
+        points: Number(SCORE_VALUES[normalizeScoreValue(row.score)] ?? 0),
         timestamp: row.time || formatTimestamp(Number(row.seconds || 0)),
         seconds: Number(row.seconds || 0),
         isMoment: !!row.isMoment,
@@ -3751,6 +3931,8 @@ async function importGKAPackage(file) {
         editedAt: row.editedAt || null,
         errorType: row.errorType || '',
         showInPdf: !!row.showInPdf,
+        clipBefore: Number(row.clipBefore || data.clipWindow?.beforeSeconds || GKA_CLIP_BEFORE),
+        clipAfter: Number(row.clipAfter || data.clipWindow?.afterSeconds || GKA_CLIP_AFTER),
         _clipNeedsRegeneration: !!row.clipNeedsRegeneration
       });
     });
