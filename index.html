@@ -959,6 +959,222 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 }
+
+/* Focused desktop workspace for fast match tagging. */
+.analysis-mode-exit {
+  display: none;
+}
+
+.selected-clips-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 10px 16px;
+  border-radius: 14px;
+  background: rgba(56, 189, 248, .18);
+  border: 1px solid rgba(56, 189, 248, .42);
+  color: #e0f2fe;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+body.analysis-mode {
+  overflow: hidden;
+}
+
+body.analysis-mode .page {
+  width: 100%;
+  max-width: none;
+  height: 100vh;
+  margin: 0;
+  padding: 8px 8px 62px;
+}
+
+body.analysis-mode .app-header,
+body.analysis-mode .top-panel,
+body.analysis-mode .stats-grid,
+body.analysis-mode .page > h2,
+body.analysis-mode .page > table,
+body.analysis-mode .action-log-panel {
+  display: none !important;
+}
+
+body.analysis-mode .analysis-mode-exit {
+  display: block;
+  position: fixed;
+  top: 8px;
+  right: 8px;
+  width: 72px;
+  z-index: 11000;
+  padding: 9px 6px;
+  border-radius: 12px;
+  background: #ef4444;
+  color: white;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+body.analysis-mode .workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 220px;
+  gap: 8px;
+  width: 100%;
+  height: calc(100vh - 70px);
+  margin: 0;
+  align-items: stretch;
+}
+
+body.analysis-mode .left-column,
+body.analysis-mode .video-panel,
+body.analysis-mode .video-shell {
+  min-height: 0;
+  height: 100%;
+}
+
+body.analysis-mode .video-panel {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 14px;
+}
+
+body.analysis-mode .video-panel > h3,
+body.analysis-mode .video-toolbar,
+body.analysis-mode .video-shortcuts {
+  display: none;
+}
+
+body.analysis-mode .video-shell {
+  border-radius: 14px;
+}
+
+body.analysis-mode #videoPlayer {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  object-fit: contain;
+}
+
+body.analysis-mode .right-column {
+  height: 100%;
+  padding: 8px;
+  border-radius: 14px;
+  overflow-y: auto;
+}
+
+body.analysis-mode .right-column > h3,
+body.analysis-mode .empty-state {
+  display: none !important;
+}
+
+body.analysis-mode .metric-grid {
+  display: grid;
+  grid-template-columns: 1fr !important;
+  gap: 6px;
+  margin: 0;
+}
+
+body.analysis-mode .metric-card {
+  min-height: 0;
+  padding: 9px 10px;
+  border-radius: 11px;
+}
+
+body.analysis-mode .metric-card-header {
+  margin: 0;
+}
+
+body.analysis-mode .metric-title {
+  font-size: 14px;
+  line-height: 1.15;
+}
+
+body.analysis-mode .metric-card .badge,
+body.analysis-mode .metric-card .mini-stats,
+body.analysis-mode .metric-card .breakdown,
+body.analysis-mode .metric-card .fixed-metric-note {
+  display: none !important;
+}
+
+body.analysis-mode .fixed-metric-controls {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+  margin-top: 7px;
+}
+
+body.analysis-mode .fixed-metric-controls button {
+  min-height: 32px;
+  padding: 5px 3px;
+  border-radius: 8px;
+  font-size: 10px;
+}
+
+body.analysis-mode .score-panel {
+  position: fixed;
+  top: auto;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  width: auto;
+  height: 48px;
+  z-index: 10900;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 7px;
+  padding: 5px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+body.analysis-mode .score-panel h3 {
+  flex: 0 0 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.15;
+  text-align: center;
+}
+
+body.analysis-mode .score-panel-note,
+body.analysis-mode .score-btn .score-label,
+body.analysis-mode .score-btn .score-value {
+  display: none;
+}
+
+body.analysis-mode .rating-buttons {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+  grid-template-rows: 1fr;
+  gap: 4px;
+  min-height: 0;
+  margin: 0;
+}
+
+body.analysis-mode .rating-buttons .score-btn {
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  height: auto;
+  padding: 2px;
+  border-radius: 8px;
+}
+
+body.analysis-mode .rating-buttons .score-code {
+  font-size: 14px;
+}
+
+@media (max-width: 899px) {
+  .analysis-mode-entry {
+    display: none !important;
+  }
+}
 </style>
 
 </head>
@@ -987,6 +1203,10 @@ https://github.com/nodeca/pako/blob/main/LICENSE
         <button class="add-btn" onclick="exportPDF()">Export PDF</button>
         <button class="add-btn" onclick="triggerImport()">Import</button>
         <button class="add-btn" onclick="generateSelectedFromActionLog()">🎬 Generate Selected Clips</button>
+        <button class="add-btn" onclick="selectGeneratedActionLogVideos()">✓ Select Generated Clips</button>
+        <button class="add-btn" onclick="clearClipSelection()">Clear Clip Selection</button>
+        <span id="selectedClipsCount" class="selected-clips-count">Selected clips: 0</span>
+        <button class="add-btn analysis-mode-entry" onclick="enterAnalysisMode()">⛶ Analysis Mode</button>
         
         <button class="add-btn" onclick="playAllSelectedClips()">▶ Play All Selected Clips</button>
         <button class="add-btn" onclick="playAllGeneratedClips()">▶ Play All Generated Clips</button>
@@ -995,6 +1215,8 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       </div>
     </div>
   </section>
+
+  <button id="analysisModeExit" class="analysis-mode-exit" type="button" onclick="exitAnalysisMode()">✕ EXIT</button>
 
 
 
@@ -1359,7 +1581,67 @@ function selectAllActionLogVideos(value) {
 }
 
 function resetActionLogFilters(){actionLogFilterState.metrics.clear();actionLogFilterState.scores.clear();document.querySelectorAll('#metricMultiMenu input,#scoreMultiMenu input').forEach(i=>i.checked=false);const sortSelect=document.getElementById('actionLogSortFilter');if(sortSelect)sortSelect.value='newest';updateMultiFilterLabels();renderLogTable()}
-function selectVisibleActionLogVideos(){const visible=new Set(getFilteredActionHistory());actionHistory.forEach(entry=>{if(entry.type==='score')entry._videoSelected=visible.has(entry)});renderLogTable()}
+function selectVisibleActionLogVideos(){getFilteredActionHistory().forEach(entry=>entry._videoSelected=true);renderLogTable()}
+
+function updateSelectedClipsCount() {
+  const count = actionHistory.filter(entry => entry.type === 'score' && entry._videoSelected).length;
+  const label = document.getElementById('selectedClipsCount');
+  if (label) label.textContent = `Selected clips: ${count}`;
+}
+
+function selectGeneratedActionLogVideos() {
+  actionHistory.forEach(entry => {
+    if (entry.type !== 'score') return;
+    entry._videoSelected = !!(entry._gkaVideoName && gkaVideoClips.has(entry._gkaVideoName));
+  });
+  renderLogTable();
+}
+
+function clearClipSelection() {
+  selectAllActionLogVideos(false);
+}
+
+function enterAnalysisMode() {
+  if (window.innerWidth < 900) {
+    alert('Analysis Mode е предназначен за компютър или по-голям екран.');
+    return;
+  }
+  document.body.classList.add('analysis-mode');
+  closeMultiFilters();
+  window.scrollTo(0, 0);
+  const pageRoot = document.documentElement;
+  const requestFullscreen = pageRoot.requestFullscreen || pageRoot.webkitRequestFullscreen;
+  if (requestFullscreen) {
+    try {
+      const result = requestFullscreen.call(pageRoot);
+      if (result && typeof result.catch === 'function') result.catch(() => {});
+    } catch (_) {}
+  }
+}
+
+function exitAnalysisMode() {
+  document.body.classList.remove('analysis-mode');
+  const exitFullscreen = document.exitFullscreen || document.webkitExitFullscreen;
+  if ((document.fullscreenElement || document.webkitFullscreenElement) && exitFullscreen) {
+    try {
+      const result = exitFullscreen.call(document);
+      if (result && typeof result.catch === 'function') result.catch(() => {});
+    } catch (_) {}
+  }
+}
+
+function handleAnalysisFullscreenChange() {
+  if (!document.fullscreenElement && !document.webkitFullscreenElement && document.body.classList.contains('analysis-mode')) {
+    document.body.classList.remove('analysis-mode');
+  }
+}
+
+document.addEventListener('fullscreenchange', handleAnalysisFullscreenChange);
+document.addEventListener('webkitfullscreenchange', handleAnalysisFullscreenChange);
+
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && document.body.classList.contains('analysis-mode')) exitAnalysisMode();
+});
 
   function createMetricState() {
     return { TOP: 0, VG: 0, G: 0, PUTIN0: 0, M: 0, BM: 0, MFG: 0 };
@@ -2037,7 +2319,7 @@ function selectVisibleActionLogVideos(){const visible=new Set(getFilteredActionH
   }
 
 
-  function renderLogTable(){const logBody=document.getElementById('logBody');if(!logBody)return;const scoreEntries=actionHistory.filter(entry=>entry.type==='score');if(!scoreEntries.length){logBody.innerHTML='<tr><td colspan="8">No actions yet</td></tr>';return}const filteredHistory=getFilteredActionHistory();if(!filteredHistory.length){logBody.innerHTML='<tr><td colspan="8">No actions match the selected filters</td></tr>';return}logBody.innerHTML=filteredHistory.map((entry,index)=>{const normalizedScore=normalizeScoreValue(entry.value),rowClass=getRowClass(normalizedScore,entry.metric),scoreClass=getScoreClass(normalizedScore,entry.metric),historyIndex=actionHistory.indexOf(entry),key=gkaActionKey(entry,historyIndex).replace(/'/g,"\\'"),videoName=entry._gkaVideoName?String(entry._gkaVideoName).replace(/'/g,"\\'"):'';const edited=entry.edited?'<span class="edited-badge">Edited</span>':'',note=entry.note?`<span class="note-preview">${escapeHtml(entry.note)}</span>`:'';return `<tr class="${rowClass}"><td><input type="checkbox" ${entry._videoSelected?'checked':''} onchange="setActionVideoSelected('${key}',this.checked)"></td><td>${index+1}</td><td><button class="timestamp-link" onclick="seekVideoTo(Math.max(0, ${Number(entry.seconds||0).toFixed(3)} - 10))">${entry.timestamp}</button></td><td>${escapeHtml(entry.metric)} ${edited}${note}</td><td><span class="log-score-pill ${scoreClass}">${displayScoreValue(normalizedScore)}</span></td><td>${formatPoints(entry.points)}</td><td>${videoName?`<button class="timestamp-link" onclick="playImportedActionVideo('${videoName}')">▶ Video</button>`:(entry._gkaVideoError?'⚠ Video error':'')}</td><td><button type="button" class="timestamp-link" onclick="openActionEdit(${historyIndex})">✏️ Edit</button></td></tr>`}).join('')}
+  function renderLogTable(){const logBody=document.getElementById('logBody');updateSelectedClipsCount();if(!logBody)return;const scoreEntries=actionHistory.filter(entry=>entry.type==='score');if(!scoreEntries.length){logBody.innerHTML='<tr><td colspan="8">No actions yet</td></tr>';return}const filteredHistory=getFilteredActionHistory();if(!filteredHistory.length){logBody.innerHTML='<tr><td colspan="8">No actions match the selected filters</td></tr>';return}logBody.innerHTML=filteredHistory.map((entry,index)=>{const normalizedScore=normalizeScoreValue(entry.value),rowClass=getRowClass(normalizedScore,entry.metric),scoreClass=getScoreClass(normalizedScore,entry.metric),historyIndex=actionHistory.indexOf(entry),key=gkaActionKey(entry,historyIndex).replace(/'/g,"\\'"),videoName=entry._gkaVideoName?String(entry._gkaVideoName).replace(/'/g,"\\'"):'';const edited=entry.edited?'<span class="edited-badge">Edited</span>':'',note=entry.note?`<span class="note-preview">${escapeHtml(entry.note)}</span>`:'';return `<tr class="${rowClass}"><td><input type="checkbox" ${entry._videoSelected?'checked':''} onchange="setActionVideoSelected('${key}',this.checked)"></td><td>${index+1}</td><td><button class="timestamp-link" onclick="seekVideoTo(Math.max(0, ${Number(entry.seconds||0).toFixed(3)} - 10))">${entry.timestamp}</button></td><td>${escapeHtml(entry.metric)} ${edited}${note}</td><td><span class="log-score-pill ${scoreClass}">${displayScoreValue(normalizedScore)}</span></td><td>${formatPoints(entry.points)}</td><td>${videoName?`<button class="timestamp-link" onclick="playImportedActionVideo('${videoName}')">▶ Video</button>`:(entry._gkaVideoError?'⚠ Video error':'')}</td><td><button type="button" class="timestamp-link" onclick="openActionEdit(${historyIndex})">✏️ Edit</button></td></tr>`}).join('')}
 
   function renderStats() {
     const activeIsGoalsConcedet = isGoalsConcedetMetric(activeMetric);
@@ -3253,6 +3535,7 @@ function setActionVideoSelected(key, checked) {
   const entries = getVideoScoreEntries();
   const match = entries.find((e, i) => gkaActionKey(e, actionHistory.indexOf(e)) === key);
   if (match) match._videoSelected = !!checked;
+  updateSelectedClipsCount();
 }
 
 
